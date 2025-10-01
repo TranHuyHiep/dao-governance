@@ -1,0 +1,51 @@
+{
+  "name": "@wingriders/governance-frontend-react-sdk",
+  "version": "1.0.3",
+  "description": "React SDK for WingRiders On-Chain DAO Governance",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WingRiders/on-chain-dao-governance.git",
+    "directory": "frontend/react/sdk"
+  },
+  "main": "dist/bundle.cjs.js",
+  "module": "dist/bundle.esm.js",
+  "types": "dist/types/index.d.ts",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "yarn clean && rollup -c",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "prettier:fix": "prettier --write \"{**/*.{ts,tsx,js,jsx,json,css},package.json}\""
+  },
+  "dependencies": {
+    "@wingriders/cab": "^2.1.7",
+    "@wingriders/governance-sdk": "^1.0.2",
+    "react-query": "^3.39.3"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^20.10.3",
+    "@types/react": "^18.2.53",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^4.9.6",
+    "typescript": "^5.3.2"
+  }
+}

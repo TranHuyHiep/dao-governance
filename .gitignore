@@ -1,0 +1,12 @@
+dist
+node_modules
+.yarn
+yarn-error.log
+.vscode
+.idea
+.env*
+!.env.prod
+!.env.test
+!.env.example
+/backend/prisma/dao-governance-client/
+/cardano-configurations/

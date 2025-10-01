@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "dao-governance-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Block {
+  id     Int      @id @default(autoincrement())
+  hash   Bytes    @unique
+  height Int
+  slot   Int      @unique
+  time   DateTime @db.Timestamptz(6)
+
+  polls          Poll[]          @relation("ParentBlock")
+  proposals      Proposal[]      @relation("ParentBlock")
+  proposalStates ProposalState[] @relation("ParentBlock")
+  votes          Vote[]
+  transactions   Transaction[]
+}
+
+model Transaction {
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  txHash Bytes  @unique
+  txFee  BigInt @db.BigInt
+  slot   Int
+
+  block          Block           @relation(fields: [slot], references: [slot], onDelete: Cascade)
+  proposalStates ProposalState[]
+  votes          Vote[]
+
+  @@index([slot])
+}
+
+model Poll {
+  id          Int      @id @default(autoincrement())
+  // slot and txHash are referring to the first proposal
+  slot        Int
+  txHash      Bytes    @unique
+  start       DateTime @db.Timestamptz(6)
+  end         DateTime @db.Timestamptz(6)
+  // Snapshot date for voting power (default = start)
+  snapshot    DateTime @db.Timestamptz(6)
+  description String
+
+  block     Block      @relation("ParentBlock", fields: [slot], references: [slot], onDelete: Cascade)
+  proposals Proposal[]
+  votes     Vote[]
+
+  @@index([slot])
+}
+
+model Proposal {
+  id                Int     @id @default(autoincrement())
+  ownerAddress      String
+  ownerPubKeyHash   Bytes
+  ownerStakeKeyHash Bytes?
+  txHash            Bytes   @unique
+  outputIndex       Int
+  slot              Int
+  pollId            Int
+  uri               String
+  name              String
+  description       String
+  communityUri      String
+  requestedAmount   BigInt?
+
+  block           Block            @relation("ParentBlock", fields: [slot], references: [slot], onDelete: Cascade)
+  poll            Poll             @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  proposalChoices ProposalChoice[]
+  proposalStates  ProposalState[]
+  votes           Vote[]
+
+  @@index([slot])
+  @@index([pollId])
+}
+
+model ProposalState {
+  id           Int            @id @default(autoincrement())
+  proposalId   Int
+  slot         Int
+  txHash       Bytes
+  // cancelReason is nonempty if status = CANCELLED
+  cancelReason String?
+  status       ProposalStatus @default(AVAILABLE)
+
+  proposal    Proposal    @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  block       Block       @relation("ParentBlock", fields: [slot], references: [slot], onDelete: Cascade)
+  transaction Transaction @relation(fields: [txHash], references: [txHash], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@index([slot])
+}
+
+enum ProposalStatus {
+  AVAILABLE // Available to be transferred to other status
+  CANCELLED // Cancelled (in case of emergency) by DAO delegate if the proposal is malicious
+  PASSED // Passed community vote
+  FAILED // Failed community vote
+}
+
+model ProposalChoice {
+  id         Int                @id @default(autoincrement())
+  proposalId Int
+  index      Int
+  type       ProposalChoiceType
+  value      String
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  votes    Vote[]
+
+  @@unique([proposalId, index])
+  @@index([proposalId])
+}
+
+enum ProposalChoiceType {
+  ACCEPT
+  REJECT
+}
+
+enum VerificationState {
+  UNVERIFIED
+  VERIFIED
+  INVALID
+}
+
+// Historical table of user
+model Vote {
+  id                Int      @id @default(autoincrement())
+  ownerAddress      String
+  ownerPubKeyHash   Bytes // this is just in case to identify the whole address
+  ownerStakeKeyHash Bytes // votes are tied to stakeKeyHash primarily
+  proposalId        Int
+  // selected choice, null means abstained from vote
+  choiceId          Int?
+  pollId            Int
+  // voting power claimed by user
+  votingPower       BigInt
+  // array of UTxOs ids (txHash#outputIndex)
+  votingUTxOs       String[]
+
+  // we are also storing the vote's state - votes need to be verified
+  // if the claimed votingPower is correct.
+  verificationState VerificationState @default(UNVERIFIED)
+
+  slot   Int
+  txHash Bytes
+
+  proposal    Proposal        @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  choice      ProposalChoice? @relation(fields: [choiceId], references: [id], onDelete: Cascade)
+  poll        Poll            @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  block       Block           @relation(fields: [slot], references: [slot], onDelete: Cascade)
+  transaction Transaction     @relation(fields: [txHash], references: [txHash], onDelete: Cascade)
+
+  // user can vote for multiple proposal in one transaction but only once for the same proposal
+  // if he wants to change the vote he creates the new transaction
+  // In theory a single tx could contain votes for multiple users, but for now we enforce
+  // a single person per txHash by not including in the unique index
+  @@unique([txHash, proposalId])
+  // index to easily find user's votes for polls
+  @@index([ownerStakeKeyHash, proposalId, pollId])
+  @@index([proposalId])
+  @@index([choiceId])
+  @@index([slot])
+  @@index([pollId])
+}

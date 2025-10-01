@@ -1,0 +1,106 @@
+services:
+  db:
+    container_name: ${COMPOSE_PROJECT_NAME}-db
+    image: postgres:17.2-alpine
+    shm_size: 256m
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      - POSTGRES_LOGGING=true
+      - POSTGRES_DB=${DB}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ${DATA_PATH}/db:/var/lib/postgresql/data
+    restart: unless-stopped
+    command:
+      [
+        'postgres',
+        '-c',
+        'log_statement=${POSTGRES_LOG_STATEMENT-none}',
+        '-c',
+        'log_duration=${POSTGRES_LOG_DURATION-off}',
+      ]
+
+  governance-server:
+    container_name: ${COMPOSE_PROJECT_NAME}-governance-server
+    depends_on:
+      - db
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
+    ports:
+      - ${GOVERNANCE_SERVER_PORT}:3240
+    environment:
+      name: ${COMPOSE_PROJECT_NAME}-governance-server
+      NODE_ENV: production
+      NETWORK_NAME: ${NETWORK_NAME}
+      MODE: server
+      SERVER_PORT: ${GOVERNANCE_SERVER_PORT}
+      AGGREGATOR_PORT: ${GOVERNANCE_AGGREGATOR_PORT}
+      LOG_LEVEL: ${GOVERNANCE_LOG_LEVEL}
+      HTTP_SERVER_KEEP_ALIVE_SECONDS: ${HTTP_SERVER_KEEP_ALIVE_SECONDS}
+      CORS_ENABLED_FOR: ${CORS_ENABLED_FOR}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB: ${DB}
+      DB_SCHEMA: ${GOVERNANCE_DB_SCHEMA}
+      KUPO_URL: https://kupo1tc979c25cunl7gq2wdr.preprod-v2.kupo-m1.demeter.run
+      OGMIOS_URL: https://ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
+      OGMIOS_HOST: ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
+      OGMIOS_PORT: 443
+      SYNC_EARLIEST_SLOT: ${GOVERNANCE_SYNC_EARLIEST_SLOT}
+      SYNC_EARLIEST_HASH: ${GOVERNANCE_SYNC_EARLIEST_HASH}
+      GOVERNANCE_TOKEN_POLICY_ID: ${GOVERNANCE_TOKEN_POLICY_ID}
+      GOVERNANCE_TOKEN_ASSET_NAME: ${GOVERNANCE_TOKEN_ASSET_NAME}
+      TOTAL_MINTED_GOVERNANCE_TOKENS: ${TOTAL_MINTED_GOVERNANCE_TOKENS}
+      PROPOSALS_WALLET_PUBKEYHASH: ${PROPOSALS_WALLET_PUBKEYHASH}
+      PROPOSALS_WALLET_STAKEKEYHASH: ${PROPOSALS_WALLET_STAKEKEYHASH}
+      PROPOSAL_COLLATERAL_QUANTITY: ${PROPOSAL_COLLATERAL_QUANTITY}
+    restart: unless-stopped
+
+  governance-aggregator:
+    container_name: ${COMPOSE_PROJECT_NAME}-governance-aggregator
+    depends_on:
+      - db
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
+    ports:
+      - ${GOVERNANCE_AGGREGATOR_PORT}:3241
+    environment:
+      name: ${COMPOSE_PROJECT_NAME}-governance-aggregator
+      NODE_ENV: production
+      NETWORK_NAME: ${NETWORK_NAME}
+      MODE: aggregator
+      SERVER_PORT: ${GOVERNANCE_SERVER_PORT}
+      AGGREGATOR_PORT: ${GOVERNANCE_AGGREGATOR_PORT}
+      LOG_LEVEL: ${GOVERNANCE_LOG_LEVEL}
+      HTTP_SERVER_KEEP_ALIVE_SECONDS: ${HTTP_SERVER_KEEP_ALIVE_SECONDS}
+      CORS_ENABLED_FOR: ${CORS_ENABLED_FOR}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB: ${DB}
+      DB_SCHEMA: ${GOVERNANCE_DB_SCHEMA}
+      KUPO_URL: https://kupo1tc979c25cunl7gq2wdr.preprod-v2.kupo-m1.demeter.run
+      OGMIOS_URL: https://ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
+      OGMIOS_HOST: ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
+      SYNC_EARLIEST_SLOT: ${GOVERNANCE_SYNC_EARLIEST_SLOT}
+      SYNC_EARLIEST_HASH: ${GOVERNANCE_SYNC_EARLIEST_HASH}
+      GOVERNANCE_TOKEN_POLICY_ID: ${GOVERNANCE_TOKEN_POLICY_ID}
+      GOVERNANCE_TOKEN_ASSET_NAME: ${GOVERNANCE_TOKEN_ASSET_NAME}
+      TOTAL_MINTED_GOVERNANCE_TOKENS: ${TOTAL_MINTED_GOVERNANCE_TOKENS}
+      PROPOSALS_WALLET_PUBKEYHASH: ${PROPOSALS_WALLET_PUBKEYHASH}
+      PROPOSALS_WALLET_STAKEKEYHASH: ${PROPOSALS_WALLET_STAKEKEYHASH}
+      PROPOSAL_COLLATERAL_QUANTITY: ${PROPOSAL_COLLATERAL_QUANTITY}
+    restart: unless-stopped
+
+volumes:
+  db:
+  node-db:
+  node-ipc:
+  kupo-db:
