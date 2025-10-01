@@ -8,5 +8,5 @@ yarn-error.log
 !.env.prod
 !.env.test
 !.env.example
-/backend/prisma/dao-governance-client/
-/cardano-configurations/
+#/backend/prisma/dao-governance-client/
+#/cardano-configurations/
