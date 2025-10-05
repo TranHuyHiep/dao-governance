@@ -89,6 +89,7 @@ services:
       KUPO_URL: https://kupo1tc979c25cunl7gq2wdr.preprod-v2.kupo-m1.demeter.run
       OGMIOS_URL: https://ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
       OGMIOS_HOST: ogmios1ykax9ettcum8cp48uhy.preprod-v6.ogmios-m1.demeter.run
+      OGMIOS_PORT: 443
       SYNC_EARLIEST_SLOT: ${GOVERNANCE_SYNC_EARLIEST_SLOT}
       SYNC_EARLIEST_HASH: ${GOVERNANCE_SYNC_EARLIEST_HASH}
       GOVERNANCE_TOKEN_POLICY_ID: ${GOVERNANCE_TOKEN_POLICY_ID}
