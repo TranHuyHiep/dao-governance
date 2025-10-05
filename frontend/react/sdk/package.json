@@ -23,7 +23,8 @@
   "dependencies": {
     "@wingriders/cab": "^2.1.7",
     "@wingriders/governance-sdk": "^1.0.2",
-    "react-query": "^3.39.3"
+    "react-query": "^3.39.3",
+    "tslib": "^2.8.1"
   },
   "peerDependencies": {
     "react": "^18.2.0",
